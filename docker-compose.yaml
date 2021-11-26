@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    depends_on:
+      - alertmanager
+    restart: always
+    networks:
+      - monitor
+
+  alertmanager:
+    image: prom/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093/alert'
+    ports:
+      - 9093:9093
+    networks:
+      - monitor
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.web
+    image: web:1.0
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - monitor
+networks:
+  monitor:
+    driver: bridge
+
